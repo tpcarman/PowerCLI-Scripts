@@ -1,5 +1,5 @@
 ﻿function Add-DrsVmToDrsVmGroup {
-    #Requires -Modules VMware.VimAutomation.Core
+    #Requires -Modules @{ ModuleName="VMware.VimAutomation.Core"; ModuleVersion="6.5.1" }
 
     <#
     .SYNOPSIS  
@@ -17,7 +17,7 @@
     .PARAMETER Cluster
         Specifies the cluster which contains the DRS VM Group
         This parameter is mandatory but does not have a default value.
-    .PARAMETER DrsVMGroup
+    .PARAMETER DrsVmGroup
         Specifies the DRS VM Group
         This parameter is mandatory but does not have a default value.
     .PARAMETER Prefix
@@ -30,11 +30,11 @@
         Specifies a datastore name
         This parameter is optional and does not have a default value.
     .EXAMPLE
-        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DRSVMGroup 'SiteA-VMs' -Prefix 'SiteA-' 
+        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DrsVmGroup 'SiteA-VMs' -Prefix 'SiteA-' 
     .EXAMPLE
-        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DRSVMGroup 'SiteA-VMs' -Suffix '-02' 
+        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DrsVmGroup 'SiteA-VMs' -Suffix '-02' 
     .EXAMPLE
-        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DRSVMGroup 'SiteB-VMs' -Datastore 'VMFS-01'  
+        Add-DrsVmToDrsVmGroup -Cluster 'Production' -DrsVmGroup 'SiteB-VMs' -Datastore 'VMFS-01'  
     #>
 
     [CmdletBinding()]
@@ -52,7 +52,7 @@
             HelpMessage = 'Specify the name of the DRS VM Group'
         )]
         [ValidateNotNullOrEmpty()]
-        [String]$DrsVMGroup,
+        [String]$DrsVmGroup,
 
         [Parameter(
             Position = 2,
@@ -92,14 +92,14 @@
         $VMs = Get-Datastore | Where-Object { ($_.name).EndsWith($Suffix) } | Get-VM | Sort-Object Name
     }
 
-    $objDrsVMGroup = Get-DrsClusterGroup -Name $DrsVMGroup -Cluster $Cluster -Type VMGroup
+    $objDrsVmGroup = Get-DrsClusterGroup -Name $DrsVmGroup -Cluster $Cluster -Type VMGroup
     foreach ($VM in $VMs) {
-        if (($objDrsVMGroup).Member -notcontains $VM) {
+        if (($objDrsVmGroup).Member -notcontains $VM) {
             try {
-                Write-Host "Adding virtual machine $VM to DRS VM Group $DrsVMGroup"
-                $null = Set-DrsClusterGroup -DrsClusterGroup $DrsVMGroup -Add -VM $VM
+                Write-Host "Adding virtual machine $VM to DRS VM Group $DrsVmGroup"
+                $null = Set-DrsClusterGroup -DrsClusterGroup $DrsVmGroup -Add -VM $VM
             } catch {
-                Write-Error "Error adding virtual machine $VM from DRS VM Group $DrsVMGroup"
+                Write-Error "Error adding virtual machine $VM from DRS VM Group $DrsVmGroup"
             } 
         }
     }
