@@ -7,7 +7,7 @@
     .DESCRIPTION
         Adds virtual machines to a DRS VM group based on datastore location
     .NOTES
-        Version:        2.0.0
+        Version:        2.1.0
         Author:         Tim Carman
         Twitter:        @tpcarman
         Github:         tpcarman
@@ -37,7 +37,7 @@
         Add-DrsVmToDrsVmGroup -Cluster 'Production' -DrsVmGroup 'SiteB-VMs' -Datastore 'VMFS-01'  
     #>
 
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess=$True)]
     Param(
         [Parameter(
             Position = 0,
@@ -82,25 +82,31 @@
         [String]$Datastore
     )
 
-    if ($Prefix) {
-        $VMs = Get-Datastore | Where-Object { ($_.name).StartsWith($Prefix) } | Get-VM | Sort-Object Name
-    }
-    if ($Datastore) {
-        $VMs = Get-Datastore | Where-Object { ($_.name) -eq $Datastore } | Get-VM | Sort-Object Name
-    }
-    if ($Suffix) {
-        $VMs = Get-Datastore | Where-Object { ($_.name).EndsWith($Suffix) } | Get-VM | Sort-Object Name
-    }
+    Begin {}
 
-    $objDrsVmGroup = Get-DrsClusterGroup -Name $DrsVmGroup -Cluster $Cluster -Type VMGroup
-    foreach ($VM in $VMs) {
-        if (($objDrsVmGroup).Member -notcontains $VM) {
-            try {
-                Write-Host "Adding virtual machine $VM to DRS VM Group $DrsVmGroup"
-                $null = Set-DrsClusterGroup -DrsClusterGroup $DrsVmGroup -Add -VM $VM
-            } catch {
-                Write-Error "Error adding virtual machine $VM from DRS VM Group $DrsVmGroup"
-            } 
+    Process {
+        if ($Prefix) {
+            $VMs = Get-Datastore | Where-Object { ($_.name).StartsWith($Prefix) } | Get-VM | Sort-Object Name
+        }
+        if ($Datastore) {
+            $VMs = Get-Datastore | Where-Object { ($_.name) -eq $Datastore } | Get-VM | Sort-Object Name
+        }
+        if ($Suffix) {
+            $VMs = Get-Datastore | Where-Object { ($_.name).EndsWith($Suffix) } | Get-VM | Sort-Object Name
+        }
+
+        $objDrsVmGroup = Get-DrsClusterGroup -Name $DrsVmGroup -Cluster $Cluster -Type VMGroup
+        foreach ($VM in $VMs) {
+            if (($objDrsVmGroup).Member -notcontains $VM) {
+                try {
+                    Write-Host "Adding virtual machine $VM to DRS VM Group $DrsVmGroup"
+                    $null = Set-DrsClusterGroup -DrsClusterGroup $DrsVmGroup -Add -VM $VM
+                } catch {
+                    Write-Error "Error adding virtual machine $VM from DRS VM Group $DrsVmGroup"
+                } 
+            }
         }
     }
+
+    End {}
 }
